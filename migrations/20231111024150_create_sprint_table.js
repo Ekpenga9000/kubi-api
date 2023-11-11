@@ -3,13 +3,18 @@
  * @returns { Promise<void> }
  */
 exports.up = function(knex) {
-  return knex.schema
-  .createTable("team", (table)=>{
+  return knex.schema.createTable("sprint", (table)=>{
     table.increments("id").primary();
-    table.string("name").notNullable(); //This would be programmatically filled with a random word and date generator. 
-    table.integer("creator")
+    table.string("key").notNullable();
+    table.integer("project_id")
     .unsigned()
-    .references("user.id");
+    .references("project.id")
+    .onUpdate("CASCADE")
+    .onDelete("CASCADE");
+    table.date("start_date");
+    table.date("end_date"); 
+    table.enu("status", ["Future","Active","Closed"]).defaultTo("Future");
+    table.integer("user_id").unsigned().references("user.id");
     table.timestamp("created_at").defaultTo(knex.fn.now());
     table.timestamp("updated_at").defaultTo(knex.raw("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")); 
   })
@@ -20,5 +25,5 @@ exports.up = function(knex) {
  * @returns { Promise<void> }
  */
 exports.down = function(knex) {
-  return knex.schema.dropTable("team");
+  return knex.schema.dropTable("sprint");
 };

@@ -11,5 +11,5 @@ app.get("/", (req, res)=>{
 })
 
 app.listen(PORT, ()=>{
-    console.log(`Server is on!!! ${5050}`)
+    console.log(`Server is on!!! ${PORT}`)
 })
