@@ -59,20 +59,19 @@ const registrationMessage = (url, token) => {
 }
 
 const passwordResetMessage = (firstname, url, token) => {
-
-
+    
     return (`
     <div>
-    <p>Dear [User's Name]</p>
+    <p>Dear ${firstname}</p>
     <br />
     <p>We received a request to reset the password associated with your KubI account. To proceed with the password
         reset, please follow the instructions below:
     </p>
     <br />
-    <p>Click on the following link to reset your password: [Reset Link]</p>
+    <span>Click on the following link to reset your password: </span> <a href="${url}/${token}">Reset link</a>
     <br>
-    <p>If the link does not work, copy and paste the following URL into your browser:
-        [Paste Reset URL]</p>
+    <span>If the link does not work, copy and paste the following URL into your browser: </span>
+        <a href="${url}/${token}">Reset link</a>
     <br>
     <p> You will be directed to a page where you can create a new password for your account.
     </p>
@@ -81,10 +80,8 @@ const passwordResetMessage = (firstname, url, token) => {
     </p>
     <br>
     <p>
-        This password reset link is valid for [specific duration, e.g., 24 hours].
+        This password reset link is valid for 1 hour.
         If you did not request a password reset, please ignore this email. Your account security is essential to us.
-        If you continue to experience issues or did not initiate this request, please contact our support team at
-        [Support Email or Phone Number].
     </p>
     <br>
     <p>

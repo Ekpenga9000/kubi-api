@@ -1,5 +1,5 @@
 const db = require("knex")(require("../knexfile"));
-const { registrationMessage } = require("../service/emailMessageService");
+const { registrationMessage, passwordResetMessage } = require("../service/emailMessageService");
 const { sendMail } = require("../service/emailSenderService");
 const { createToken, validateToken } = require("../service/jwtService");
 const bcrypt = require("bcryptjs");
@@ -148,7 +148,7 @@ const login = async (req, res) => {
         delete user.password_hash; 
 
         const payload = {id}; 
-        const token = createToken(payload);
+        const token = createToken(payload,"1d");
         return res.status(200).json({user,token});
 
     }catch(error){
@@ -212,24 +212,71 @@ const changePassword = async(req, res) =>{
 }
 //Things to do 
     //reset password
-const resetPassword = async(req, res)=>{
+const sendResetPasswordLink = async(req, res)=>{
     const {email} = req.body; 
 
     if(!email){
         return res.status(400).json({"message":"Invalid request."}); 
     }
 
+   try{
     const user = await db("user").where("email", email).first();
 
     if(!user){
         return res.status(401).json({"message":"No user found"}); 
     }
 
-    const payload = {email}
-    const token = createToken(payload);
+    const {firstname,id} = user; 
 
-    //create a token with the email address and send it to user's email.
-    //send an email to the user with the link and res sponse status of 200.
+    const payload = {id};
+    const token = createToken(payload,"1h");
+    
+    const url = `${process.env.CLIENT_URL}/password-reset`;
+    const emailMessage = passwordResetMessage(firstname, url, token);
+    const subject = "Password Reset Request for Your KubI Account"
+
+    sendMail(email, subject, emailMessage).catch(e => console.log(e));
+
+    return res.status(200).json({"message":"An email has been sent to " + email});
+
+   }catch(error){
+    console.log(error);
+    return res.status(500).json({"message":"Unable to process your request."})
+   }
+}
+
+const resetPassword = async(req,res) =>{
+    //Confirm that the token and the email, password and confirm password
+    const {email, password, confirmPassword} = req.body;
+    const {authorization} = req.headers; 
+
+    if(!email || !password || !confirmPassword || !authorization){
+        return res.status(400).json({"message":"Invalid request"}); 
+    }
+
+    if(password !== confirmPassword){
+        return res.status(400).json({"message":"Password and confirm password values mis-match"});
+    }
+
+    try{
+        const id = validateToken(authorization,"id");
+
+        const user = await db("user").where("id", id).andWhere("email", email).first(); 
+
+        if(!user){
+            return res.status(401).json({"message":"User not found"})
+        }
+
+        const password_hash = bcrypt.hashSync(password); 
+
+        await db("user").where("id",id).andWhere("email",email).update("password_hash",password_hash); 
+
+        return res.status(200).json({"message":"Password has been updated"});
+
+    }catch(err){
+        console.log(err);
+        return res.status(500).json({"message":"Unable to carryout your request, try again later."});
+    }
 
 }
 
@@ -239,5 +286,6 @@ module.exports = {
     registerUser,
     login,
     changePassword,
+    sendResetPasswordLink,
     resetPassword
 }
