@@ -4,32 +4,6 @@ const { sendMail } = require("../service/emailSenderService");
 const { createToken, validateToken } = require("../service/jwtService");
 const bcrypt = require("bcryptjs");
 
-
-
-/**
- * OHL
- * The plan is for registration link to be sent to the person's email address. 
- * Then the person would click on that link and fill the form to register. 
- * upon successful registration, the person would be sent to the dashbord. 
- * 
- * Customer inputs email address and clicks on register.
- * The request is sent to the backend. 
- *   if user is registered with that email addy 
- *      Customer is informed and asked to click on the forgotten password. 
- *   else
- *      Customer is sent a link to that email address with a link and a token that
- *      expires in 24 hours. 
- * 
- *  if Customer clicks on the link
- *      Customer fills the form and registers and is sent to the dashboard. 
- *  else if the link expires
- *      Customer would be redirected to the registration page. 
- *  
- */
-
-
-//registration
-
 const fetchNewUserEmail = async (req, res) => {
     const { email } = req.body;
 
@@ -149,7 +123,7 @@ const login = async (req, res) => {
 
         const payload = {id}; 
         const token = createToken(payload,"1d");
-        return res.status(200).json({user,token});
+        return res.status(200).json({id,token});
 
     }catch(error){
         console.log(error);
