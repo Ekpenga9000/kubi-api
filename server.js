@@ -4,9 +4,9 @@ const cors = require("cors");
 require("dotenv").config();
 const authRouter = require("./routes/authRoute");
 const userRouter = require("./routes/userRoute");
-app.use(express.json());
 const PORT = process.env.PORT || 5050;
 
+app.use(express.json());
 app.use(cors());
 app.use(express.static("public"));
 

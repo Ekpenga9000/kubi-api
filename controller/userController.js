@@ -10,22 +10,33 @@ const getUserById = async (req, res) =>{
     }
 
     const token = validateToken(authorization, "id");
+    
+    if(!token){
+      return res.status(401).json({"message":"Invalid token"});
+    }
 
-    if(id !== token){
+    if(id !== token.toString()){
         return res.status(401).json({"message":"Invalid token"});
     }
 
-    const user = await db("user")
-                .where("id", id)
-                .first();
+    try{
+        const user = await db("user")
+                    .where("id", id)
+                    .first();
+    
+        if(!user.id){
+            return res.status(404).json({"message":"No user found."});
+        }  
+    
+        delete user.password_hash;
+    
+        return res.status(200).json({user});
+        
+    }catch(error){
+        console.log(error); 
+        return res.status(500).json({"message":"Unable to carryout your request, please try again."})
+    }
 
-    if(!user.id){
-        return res.status(404).json({"message":"No user found."});
-    }  
-
-    delete user.password_hash;
-
-    return res.status(200).json({user});
 }
 
 module.exports = {
