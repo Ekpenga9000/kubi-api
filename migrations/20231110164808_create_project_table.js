@@ -9,6 +9,7 @@ exports.up = function(knex) {
       table.string("project_number").notNullable().unique(); 
       table.string("name").notNullable();
       table.text("description");
+      table.string("type").notNullable();
       table.enu("status", ["Active", "Deferred","Closed"]).defaultTo("Active"); 
       table.date("startDate").notNullable();
       table.date("endDate").notNullable(); 

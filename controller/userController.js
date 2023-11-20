@@ -39,6 +39,13 @@ const getUserById = async (req, res) =>{
 
 }
 
+const updateUserDetails = async(req,res)=>{
+    //Check that the body has the data 
+    //Check that there is a token coming
+
+    // compa
+}
 module.exports = {
-    getUserById
+    getUserById,
+    updateUserDetails
 }

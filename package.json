@@ -2,12 +2,13 @@
   "name": "kubi-api",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "start": "node server",
     "dev": "nodemon server",
     "migrate": "knex migrate:latest",
     "migrate:down": "knex migrate:down",
+    "migrate:up": "knex migrate:up",
     "migrate:rollback": "knex migrate:rollback",
     "seed": "knex seed:run"
   },
