@@ -10,6 +10,7 @@ exports.up = function(knex) {
     table.integer("creator")
     .unsigned()
     .references("user.id");
+    table.integer("member").unsigned().notNullable().references("user.id");
     table.enu("role", ["admin", "member"]).defaultTo("member");
     table.enu("member_status", ["active", "removed"]).defaultTo("active");
     table.timestamp("created_at").defaultTo(knex.fn.now());

@@ -1,6 +1,6 @@
 const router = require("express").Router();
-const controller = require("../controller/projectController");
+const projectController = require("../controller/projectController");
 
-router.post("/", );
+router.get("/", projectController.fetchProjectsById);
 
 module.exports = router;
