@@ -11,7 +11,7 @@ exports.up = function(knex) {
     table.string("email").notNullable().unique();
     table.text("profile_pic");
     table.string("password_hash").notNullable();
-    table.enu("status", ["Active", "Inactive","Deleted"]).defaultTo("Active");  
+    table.enu("status", ["active", "inactive","deleted"]).defaultTo("active");  
     table.timestamp("created_at").defaultTo(knex.fn.now());
     table.timestamp("updated_at").defaultTo(knex.raw("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")); 
   })

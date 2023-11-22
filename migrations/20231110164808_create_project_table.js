@@ -10,7 +10,7 @@ exports.up = function(knex) {
       table.string("name").notNullable();
       table.text("description");
       table.string("type").notNullable();
-      table.enu("status", ["Active", "Deferred","Closed"]).defaultTo("Active"); 
+      table.enu("status", ["active", "deferred","closed"]).defaultTo("active"); 
       table.date("startDate").notNullable();
       table.date("endDate").notNullable(); 
       table
@@ -21,6 +21,9 @@ exports.up = function(knex) {
       .integer("project_lead")
       .unsigned()
       .references("user.id");
+      table.integer("project_team")
+      .unsigned()
+      .references("team.id").notNullable();
       table.timestamp("created_at").defaultTo(knex.fn.now());
       table.timestamp("updated_at").defaultTo(knex.raw("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")); 
     })
