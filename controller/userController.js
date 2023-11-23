@@ -29,7 +29,7 @@ const getUserById = async (req, res) =>{
                     .where("id", id)
                     .first();
     
-        if(!user.id){
+        if(!user){
             return res.status(404).json({"message":"No user found."});
         }  
     

@@ -11,8 +11,8 @@ exports.up = function(knex) {
       table.text("description");
       table.string("type").notNullable();
       table.enu("status", ["active", "deferred","closed"]).defaultTo("active"); 
-      table.date("startDate").notNullable();
-      table.date("endDate").notNullable(); 
+      table.date("start_date").notNullable();
+      table.date("end_date").notNullable(); 
       table
       .integer("project_creator")
       .unsigned()
