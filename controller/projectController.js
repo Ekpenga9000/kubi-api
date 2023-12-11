@@ -28,7 +28,7 @@ const fetchProjectById = async (req, res) => {
     const { projectId } = req.params;
     //fetch the project the project is tied to the user. 
     try{
-        const project = await db("project")
+        const data = await db("project")
             .select(
                 "project.id as id",
                 "project.name as name",
@@ -55,10 +55,10 @@ const fetchProjectById = async (req, res) => {
         
         // You would be required to use an alias for double calls on similar relationships.
          
-        if (!project) {
+        if (!data) {
             return res.status(404).json({ "message": "No project was found" });
         }
-       return res.status(200).json({project});
+       return res.status(200).json(data);
     }catch(err){
        console.log(err);
        return res.status(500).json({"error":"Internal Server Error"});
