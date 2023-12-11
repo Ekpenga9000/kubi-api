@@ -11,17 +11,70 @@ const createProjectNumber = (str, id) =>{
     return projectNumber;
 }
 
+const fetchProjectById = async (req, res) => {
+    //Authenticate the user
+    const { authorization } = req.headers
+    
+    if (!authorization) {
+        return res.status(400).json({ "message": "Bad request" });
+    }
+
+    const userId = validateToken(authorization, "id");
+
+    if (!userId) {
+        return res.status(401).json({"message":"Unauthorized Request."});
+    }
+
+    const { projectId } = req.params;
+    //fetch the project the project is tied to the user. 
+    try{
+        const project = await db("project")
+            .select(
+                "project.id as id",
+                "project.name as name",
+                "project.status as status",
+                "project.project_number as project_number",
+                "project.type as type",
+                "project.created_at as created_at",
+                "project.description as description",  
+                 db.raw("CONCAT(user_creator.firstname, ' ', user_creator.lastname) as project_creator"),
+                "user_lead.id as lead_id",
+                db.raw("CONCAT(user_lead.firstname, ' ', user_lead.lastname) as project_lead"),
+                 "project.start_date as startDate",
+                 "project.end_date as endDate",
+                "team.role as permission"
+            )
+            // You would be required to use an alias for double calls on similar relationships. 
+            .join("user as user_creator", "project.project_creator", "user_creator.id")
+            .join("user as user_lead", "project.project_lead", "user_lead.id")
+            .join("team", "project.project_team", "team.id")
+            .join("user as user_team", "team.member", "user_team.id")
+            .where("team.member", userId)
+            .andWhere("project.id", projectId)
+            .first();   
+        
+        // You would be required to use an alias for double calls on similar relationships.
+         
+        if (!project) {
+            return res.status(404).json({ "message": "No project was found" });
+        }
+       return res.status(200).json({project});
+    }catch(err){
+       console.log(err);
+       return res.status(500).json({"error":"Internal Server Error"});
+    }
+}
 const fetchProjectsByUserId = async(req, res) =>{
     const {authorization} = req.headers; 
 
     if(!authorization){
-        return res.status(400).json({"message":"Unauthorized Request."});
+        return res.status(400).json({"message":"Bad Request."});
     }
 
     const userId = validateToken(authorization, "id");
 
     if(!userId){
-     return res.status(400).json({"message":"Unauthorized request."});
+     return res.status(401).json({"message":"Unauthorized request."});
     }
 
      try{
@@ -33,14 +86,9 @@ const fetchProjectsByUserId = async(req, res) =>{
                  "project.project_number as project_number",
                  "project.type as type",
                  "project.created_at as created_at",
-                 "user_creator.firstname as creator_firstname",
-                 "user_creator.lastname as creator_lastname",
+                 db.raw("CONCAT(user_creator.firstname, ' ', user_creator.lastname) as project_creator"),
                  "user_lead.id as lead_id",
                  db.raw("CONCAT(user_lead.firstname, ' ', user_lead.lastname) as project_lead"),
-                 "user_team.firstname as team_member_firstname",
-                 "user_team.lastname as team_member_lastname",
-                 "project.start_date as startDate",
-                 "project.end_date as endDate",
                  "team.role as permission"
              )
              // You would be required to use an alias for double calls on similar relationships. 
@@ -143,5 +191,6 @@ const createProject = async(req, res) =>{
 
 module.exports = {
     fetchProjectsByUserId, 
-    createProject
+    createProject,
+    fetchProjectById
 }
