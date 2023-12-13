@@ -113,7 +113,7 @@ const createProject = async(req, res) =>{
     const {authorization} = req.headers; 
 
     if(!authorization){
-        return res.status(400).json({"message":"Unauthorized request"});
+        return res.status(401).json({"message":"Unauthorized request"});
     }
     
     const { name, description, type, status, start_date, end_date, team_id } = req.body
