@@ -12,6 +12,54 @@ const createProjectNumber = (str, id) =>{
 }
 
 const fetchProjectById = async (req, res) => {
+    const { authorization } = req.headers
+    
+    if (!authorization) {
+        return res.status(400).json({ "message": "Bad request" });
+    }
+
+    const userId = validateToken(authorization, "id");
+
+    if (!userId) {
+        return res.status(401).json({"message":"Unauthorized Request."});
+    }
+
+    const { projectId } = req.params;
+    //fetch the project the project is tied to the user.
+
+    // What is going to be gotten are the following
+    // name, number,id, desc, status and permission
+    try{
+        const data = await db("project")
+            .select(
+                "project.id as id",
+                "project.name as name",
+                "project.status as status",
+                "project.project_number as project_number",
+                "project.description as description",  
+                "team.role as permission"
+            )
+            // You would be required to use an alias for double calls on similar relationships. 
+            .join("team", "project.project_team", "team.id")
+            .join("user as user_team", "team.member", "user_team.id")
+            .where("team.member", userId)
+            .andWhere("project.id", projectId)
+            .first();   
+        
+        // You would be required to use an alias for double calls on similar relationships.
+         
+        if (!data) {
+            return res.status(404).json({ "message": "No project was found" });
+        }
+       return res.status(200).json(data);
+    }catch(err){
+       console.log(err);
+       return res.status(500).json({"error":"Internal Server Error"});
+    }
+}
+
+
+const fetchProjectDetailsById = async (req, res) => {
     //Authenticate the user
     const { authorization } = req.headers
     
@@ -26,7 +74,10 @@ const fetchProjectById = async (req, res) => {
     }
 
     const { projectId } = req.params;
-    //fetch the project the project is tied to the user. 
+    //fetch the project the project is tied to the user.
+
+    // What is going to be gotten are the following
+    // name, id, desc, status and permission
     try{
         const data = await db("project")
             .select(
@@ -64,7 +115,8 @@ const fetchProjectById = async (req, res) => {
        return res.status(500).json({"error":"Internal Server Error"});
     }
 }
-const fetchProjectsByUserId = async(req, res) =>{
+const fetchProjectsByUserId = async (req, res) => {
+
     const {authorization} = req.headers; 
 
     if(!authorization){
@@ -192,5 +244,6 @@ const createProject = async(req, res) =>{
 module.exports = {
     fetchProjectsByUserId, 
     createProject,
-    fetchProjectById
+    fetchProjectById,
+    fetchProjectDetailsById
 }
