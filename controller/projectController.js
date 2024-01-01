@@ -35,7 +35,7 @@ const fetchProjectById = async (req, res) => {
                 "project.id as id",
                 "project.name as name",
                 "project.status as status",
-                "project.project_number as project_number",
+                "project.project_number as projectNumber",
                 "project.description as description",  
                 "team.role as permission"
             )
@@ -74,14 +74,10 @@ const fetchProjectDetailsById = async (req, res) => {
     }
 
     const { projectId } = req.params;
-    //fetch the project the project is tied to the user.
-
-    // What is going to be gotten are the following
-    // name, id, desc, status and permission
     try{
         const data = await db("project")
             .select(
-                "project.id as id",
+                "project.id as project_id",
                 "project.name as name",
                 "project.status as status",
                 "project.project_number as project_number",
@@ -93,7 +89,8 @@ const fetchProjectDetailsById = async (req, res) => {
                 db.raw("CONCAT(user_lead.firstname, ' ', user_lead.lastname) as project_lead"),
                  "project.start_date as startDate",
                  "project.end_date as endDate",
-                "team.role as permission"
+                "team.name as team_name",
+                "team.id as team_id"
             )
             // You would be required to use an alias for double calls on similar relationships. 
             .join("user as user_creator", "project.project_creator", "user_creator.id")
