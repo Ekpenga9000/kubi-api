@@ -3,11 +3,10 @@ const {validateToken} = require("../service/jwtService");
 
 /* Utility functions */
 
-const createProjectNumber = (str, id) =>{
-    const wordArr = str.trim().toUpperCase().split(""); 
-    const projectNumber = "" + wordArr[0] + wordArr[wordArr.length -1] + id; 
-
-    return projectNumber;
+const createProjectNumber = (str) =>{
+    const name = str.split(" ");
+    const firstLetters = name.map((word) => word[0].toUpperCase());
+    return firstLetters.join("");
 }
 
 const fetchProjectById = async (req, res) => {
@@ -164,10 +163,10 @@ const createProject = async(req, res) =>{
         return res.status(401).json({"message":"Unauthorized request"});
     }
     
-    const { name, description, type, status, start_date, end_date, team_id } = req.body
+    const { name, description, type, status, start_date, end_date, team_id, project_number } = req.body
 
-    if(!name.trim() || !type.trim() || !status.trim() || !start_date.trim() || !end_date.trim()){
-        return res.status(400).json({"message":""})
+if(!name.trim() || !type.trim() || !status.trim() || !start_date.trim() || !end_date.trim()){
+        return res.status(400).json({"message":"Invalid project creation request."})
     }
 
     const userId = validateToken(authorization, "id"); 
@@ -203,8 +202,9 @@ const createProject = async(req, res) =>{
             project_team = team_id; 
         }
 
-
-        const project_number = createProjectNumber(name,userId); 
+        if (!project_number.trim()) {
+            project_number = createProjectNumber(name);             
+        }
         
         const project_lead = userId; 
         const project_creator = userId; 
