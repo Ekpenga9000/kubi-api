@@ -12,7 +12,7 @@ exports.up = function(knex) {
     table.string("ticket_number").notNullable();
     table.string("summary").notNullable();
     table.text("description");
-    table.enu("type", ["Epic", "Bug","Task"]).defaultTo("Task");
+    table.enu("type", ["Epic","Story","Bug","Task", "Subtask"]).defaultTo("Task");
     table.enu("priority",["High", "Medium", "Low"]).defaultTo("Medium");
     table.enu("status", ["Open", "In Progress", "In Review", "Done"]).defaultTo("Open");
     table.integer("creator").unsigned()
