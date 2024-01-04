@@ -6,7 +6,7 @@ exports.up = function(knex) {
     return knex.schema
     .createTable("project", (table)=>{
       table.increments("id").primary();
-      table.string("project_number").notNullable().unique(); 
+      table.string("project_number").notNullable(); 
       table.string("name").notNullable();
       table.text("description");
       table.string("type").notNullable();

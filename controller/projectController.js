@@ -4,9 +4,8 @@ const {validateToken} = require("../service/jwtService");
 /* Utility functions */
 
 const createProjectNumber = (str, id) =>{
-    const timeStamp = Date.now(); 
     const wordArr = str.trim().toUpperCase().split(""); 
-    const projectNumber = "" + wordArr[0] + wordArr[wordArr.length -1] + id + timeStamp; 
+    const projectNumber = "" + wordArr[0] + wordArr[wordArr.length -1] + id; 
 
     return projectNumber;
 }
