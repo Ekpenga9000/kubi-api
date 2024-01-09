@@ -40,7 +40,7 @@ const fetchProjectById = async (req, res) => {
             .join("user as user_team", "team.member", "user_team.id")
             .where("team.member", userId)
             .andWhere("project.id", projectId)
-            .andWhere("project.archived", false)
+            .andWhere("project.archived", "false")
             .first();   
         
         // You would be required to use an alias for double calls on similar relationships.
@@ -143,6 +143,56 @@ const fetchProjectsByUserId = async (req, res) => {
              .join("team", "project.project_team", "team.id")
              .join("user as user_team", "team.member", "user_team.id")
              .where("team.member", userId)
+            .andWhere("project.archived", "false")
+             .orderBy("project.created_at", "desc");
+         
+         // You would be required to use an alias for double calls on similar relationships.
+        
+        return res.status(200).json({projects});
+     }catch(err){
+        console.log(err);
+        return res.status(500).json({"error":"Internal Server Error"});
+     }
+}
+
+const fetchFilteredProjectsByUserId = async (req, res) => {
+
+    const {authorization} = req.headers; 
+
+    if(!authorization){
+        return res.status(400).json({"message":"Bad Request."});
+    }
+
+    const userId = validateToken(authorization, "id");
+
+    if(!userId){
+     return res.status(401).json({"message":"Unauthorized request."});
+    }
+
+    const { status } = req.params; 
+
+     try{
+         const projects = await db("project")
+             .select(
+                 "project.id as id",
+                 "project.name as name",
+                 "project.status as status",
+                 "project.project_number as project_number",
+                 "project.type as type",
+                 "project.created_at as created_at",
+                 db.raw("CONCAT(user_creator.firstname, ' ', user_creator.lastname) as project_creator"),
+                 "user_lead.id as lead_id",
+                 db.raw("CONCAT(user_lead.firstname, ' ', user_lead.lastname) as project_lead"),
+                 "team.role as permission"
+             )
+             // You would be required to use an alias for double calls on similar relationships. 
+             .join("user as user_creator", "project.project_creator", "user_creator.id")
+             .join("user as user_lead", "project.project_lead", "user_lead.id")
+             .join("team", "project.project_team", "team.id")
+             .join("user as user_team", "team.member", "user_team.id")
+             .where("team.member", userId)
+             .andWhere("project.archived", "false")
+             .andWhere("project.status", status)
              .orderBy("project.created_at", "desc");
          
          // You would be required to use an alias for double calls on similar relationships.
@@ -236,48 +286,48 @@ if(!name.trim() || !type.trim() || !status.trim() || !start_date.trim() || !end_
 }
 
 const fetchArchivedProjectsById = async (req, res) => {
-    const { authorization } = req.headers
-    
-    if (!authorization) {
-        return res.status(400).json({ "message": "Bad request" });
+    const {authorization} = req.headers; 
+
+    if(!authorization){
+        return res.status(400).json({"message":"Bad Request."});
     }
 
     const userId = validateToken(authorization, "id");
 
-    if (!userId) {
-        return res.status(401).json({"message":"Unauthorized Request."});
+    if(!userId){
+     return res.status(401).json({"message":"Unauthorized request."});
     }
 
-    const { projectId } = req.params;
-    
-    try{
-        const data = await db("project")
-            .select(
-                "project.id as id",
-                "project.name as name",
-                "project.status as status",
-                "project.project_number as projectNumber",
-                "project.description as description",
-                "team.role as permission"
-            )
-            // You would be required to use an alias for double calls on similar relationships. 
-            .join("team", "project.project_team", "team.id")
-            .join("user as user_team", "team.member", "user_team.id")
-            .where("team.member", userId)
-            .andWhere("project.id", projectId)
-            .andWhere("project.archived", true)
-            .first();   
-        
-        // You would be required to use an alias for double calls on similar relationships.
+     try{
+         const projects = await db("project")
+             .select(
+                 "project.id as id",
+                 "project.name as name",
+                 "project.status as status",
+                 "project.project_number as project_number",
+                 "project.type as type",
+                 "project.created_at as created_at",
+                 db.raw("CONCAT(user_creator.firstname, ' ', user_creator.lastname) as project_creator"),
+                 "user_lead.id as lead_id",
+                 db.raw("CONCAT(user_lead.firstname, ' ', user_lead.lastname) as project_lead"),
+                 "team.role as permission"
+             )
+             // You would be required to use an alias for double calls on similar relationships. 
+             .join("user as user_creator", "project.project_creator", "user_creator.id")
+             .join("user as user_lead", "project.project_lead", "user_lead.id")
+             .join("team", "project.project_team", "team.id")
+             .join("user as user_team", "team.member", "user_team.id")
+             .where("team.member", userId)
+            .andWhere("project.archived", "true")
+             .orderBy("project.created_at", "desc");
          
-        if (!data) {
-            return res.status(404).json({ "message": "No project was found" });
-        }
-       return res.status(200).json(data);
-    }catch(err){
-       console.log(err);
-       return res.status(500).json({"error":"Internal Server Error"});
-    }
+         // You would be required to use an alias for double calls on similar relationships.
+        
+        return res.status(200).json({projects});
+     }catch(err){
+        console.log(err);
+        return res.status(500).json({"error":"Internal Server Error"});
+     }
 }
 
 const archiveProjectById = async (req, res) => {
@@ -319,13 +369,16 @@ const archiveProjectById = async (req, res) => {
         }
 
         //The project is not archived;
-        if (userProject.archived) {
+        if (userProject.archived === "true") {
             return res.status(204).json({ "message": "Project is already archived" });
         }
+        
+        const { archived } = req.body; 
 
         await db("project")
             .where("id", id)
-            .update("archived", true); 
+            .update("archived", archived)
+            .update("status", "closed");
         
         return res.status(200).json({ message: 'Entity updated successfully' });
         
@@ -386,5 +439,6 @@ module.exports = {
     fetchProjectById,
     fetchProjectDetailsById,
     deleteProjectById,
-    fetchArchivedProjectsById
+    fetchArchivedProjectsById,
+    fetchFilteredProjectsByUserId
 }
