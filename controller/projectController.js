@@ -40,7 +40,6 @@ const fetchProjectById = async (req, res) => {
             .join("user as user_team", "team.member", "user_team.id")
             .where("team.member", userId)
             .andWhere("project.id", projectId)
-            .andWhere("project.archived", "false")
             .first();   
         
         // You would be required to use an alias for double calls on similar relationships.
@@ -48,7 +47,8 @@ const fetchProjectById = async (req, res) => {
         if (!data) {
             return res.status(404).json({ "message": "No project was found" });
         }
-       return res.status(200).json(data);
+       
+        return res.status(200).json(data);
     }catch(err){
        console.log(err);
        return res.status(500).json({"error":"Internal Server Error"});
