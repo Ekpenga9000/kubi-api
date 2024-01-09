@@ -23,7 +23,8 @@ exports.up = function(knex) {
       .references("user.id");
       table.integer("project_team")
       .unsigned()
-      .references("team.id").notNullable();
+        .references("team.id").notNullable();
+      table.enu("archived", ["true", "false"]).defaultTo("false");
       table.timestamp("created_at").defaultTo(knex.fn.now());
       table.timestamp("updated_at").defaultTo(knex.raw("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")); 
     })

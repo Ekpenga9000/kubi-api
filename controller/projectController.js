@@ -24,10 +24,7 @@ const fetchProjectById = async (req, res) => {
     }
 
     const { projectId } = req.params;
-    //fetch the project the project is tied to the user.
-
-    // What is going to be gotten are the following
-    // name, number,id, desc, status and permission
+    
     try{
         const data = await db("project")
             .select(
@@ -35,7 +32,7 @@ const fetchProjectById = async (req, res) => {
                 "project.name as name",
                 "project.status as status",
                 "project.project_number as projectNumber",
-                "project.description as description",  
+                "project.description as description",
                 "team.role as permission"
             )
             // You would be required to use an alias for double calls on similar relationships. 
@@ -43,6 +40,7 @@ const fetchProjectById = async (req, res) => {
             .join("user as user_team", "team.member", "user_team.id")
             .where("team.member", userId)
             .andWhere("project.id", projectId)
+            .andWhere("project.archived", false)
             .first();   
         
         // You would be required to use an alias for double calls on similar relationships.
@@ -237,6 +235,107 @@ if(!name.trim() || !type.trim() || !status.trim() || !start_date.trim() || !end_
     // Return the project
 }
 
+const fetchArchivedProjectsById = async (req, res) => {
+    const { authorization } = req.headers
+    
+    if (!authorization) {
+        return res.status(400).json({ "message": "Bad request" });
+    }
+
+    const userId = validateToken(authorization, "id");
+
+    if (!userId) {
+        return res.status(401).json({"message":"Unauthorized Request."});
+    }
+
+    const { projectId } = req.params;
+    
+    try{
+        const data = await db("project")
+            .select(
+                "project.id as id",
+                "project.name as name",
+                "project.status as status",
+                "project.project_number as projectNumber",
+                "project.description as description",
+                "team.role as permission"
+            )
+            // You would be required to use an alias for double calls on similar relationships. 
+            .join("team", "project.project_team", "team.id")
+            .join("user as user_team", "team.member", "user_team.id")
+            .where("team.member", userId)
+            .andWhere("project.id", projectId)
+            .andWhere("project.archived", true)
+            .first();   
+        
+        // You would be required to use an alias for double calls on similar relationships.
+         
+        if (!data) {
+            return res.status(404).json({ "message": "No project was found" });
+        }
+       return res.status(200).json(data);
+    }catch(err){
+       console.log(err);
+       return res.status(500).json({"error":"Internal Server Error"});
+    }
+}
+
+const archiveProjectById = async (req, res) => {
+    const { authorization } = req.headers; 
+
+    if (!authorization) {
+        return res.status(401).json({ "message": "Invalid request" }); 
+    }
+
+    const { id } = req.body;
+    
+    if (!id) {
+        return res.status(400).json({ "message": "Bad request" }); 
+    }
+
+    const userId = validateToken(authorization, "id");
+
+    try {
+        const userProject = await db("project")
+            .select("project.id as projectId",
+                "project.archived as archived",
+                "team.role as permission"
+            )
+            .join("team", "project.project_team", "team.id")
+            .where("team.member", userId)
+            .andWhere("project.id", id)
+            .first();
+
+        //We are checking for the following:
+
+        //The User has permission
+        if (userProject.permission !== "admin") {
+            return res.status(403).json({ "message": "Insufficient priviledges to carryout request." });
+        }
+
+        //The project id exists
+        if (!userProject.projectId) {
+            return res.status(404).json({ "message": "Project with id not found." });
+        }
+
+        //The project is not archived;
+        if (userProject.archived) {
+            return res.status(204).json({ "message": "Project is already archived" });
+        }
+
+        await db("project")
+            .where("id", id)
+            .update("archived", true); 
+        
+        return res.status(200).json({ message: 'Entity updated successfully' });
+        
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({ "message": "Unable to carryout your request at this time." });
+
+    }
+}
+
 const deleteProjectById = async (req, res) => {
     
     const { authorization } = req.headers; 
@@ -281,9 +380,11 @@ const deleteProjectById = async (req, res) => {
 }
 
 module.exports = {
+    archiveProjectById,
     fetchProjectsByUserId, 
     createProject,
     fetchProjectById,
     fetchProjectDetailsById,
-    deleteProjectById
+    deleteProjectById,
+    fetchArchivedProjectsById
 }
