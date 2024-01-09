@@ -1,4 +1,5 @@
 const db = require("knex")(require("../knexfile")); 
+const knex = require("knex");
 const {validateToken} = require("../service/jwtService");
 
 /* Utility functions */
@@ -233,13 +234,56 @@ if(!name.trim() || !type.trim() || !status.trim() || !start_date.trim() || !end_
         return res.status(500).json({"message":"Internal Server Error. "});
     }
 
-
     // Return the project
+}
+
+const deleteProjectById = async (req, res) => {
+    
+    const { authorization } = req.headers; 
+
+    if (!authorization) {
+        return res.status(401).json({ "message": "Invalid request" });
+    }
+
+    const { id } = req.params; 
+    if (!id) {
+        return res.status(400).json({ "message": "Invalid request" });
+    }
+
+    try {
+        const userId = validateToken(authorization, "id"); 
+
+        const user = await db("project")
+            .select("project.id as projectId",
+                "team.role as permission"
+            )
+            .join("team", "project.project_team", "team.id")
+            .where("team.member", userId)
+            .andWhere("project.id", id)
+            .first();
+        
+        const { permission } = user; 
+
+        if (permission !== "admin") {
+            return res.status(403).json({ "message": "Insufficient permissions" }); 
+        }
+
+        await db.transaction(async (trx) => {
+            await trx("project").where("id", id).del();
+        })
+
+        return res.status(204).send("Project has been deleted.");
+        
+    } catch (err) {
+        console.log(err); 
+        return res.status(500).json({"message": "Unable to carryout your request at this time."})
+    }
 }
 
 module.exports = {
     fetchProjectsByUserId, 
     createProject,
     fetchProjectById,
-    fetchProjectDetailsById
+    fetchProjectDetailsById,
+    deleteProjectById
 }
