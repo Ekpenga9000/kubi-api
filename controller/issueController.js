@@ -16,17 +16,39 @@ const createIssue = async (req, res) => {
         return res.status(401).send("Invalid request.");
     }
 
-    try {
-        // create the issue number
+    const userId = validateToken(authorization, "id"); 
 
-        const ticket_number = Number("" + projectId + Date.now()); 
+    if (!userId) {
+        return res.status(401).send("Invalid request.");
+    }
+
+    try {
+        // We are going to get the project key
+
+        const project = await db("project")
+            .select("id",
+                "project_number"
+            )
+            .where("id", projectId)
+            .first();
+        
+        const issue = await db("issue")
+            .select("ticket_number")
+            .where("project_id", projectId)
+            .orderBy("ticket_number", 'desc')
+            .first();
+        
+        const { project_number } = project; 
+        const ticket = issue ? Number(issue.ticket_number) + 1: 1; 
 
         const newIssue = {
             project_id: projectId, 
-            ticket_number, 
+            project_key: project_number, 
+            ticket_number:ticket, 
             summary, 
             type, 
-            priority
+            priority,
+            creator:userId
         }
     
         await db("issue").insert(newIssue); 
@@ -57,7 +79,7 @@ const fetchIssuesByProjectId = async (req, res) => {
 
         const data = await db("issue")
             .select("id",
-                "ticket_number as ticketNumber",
+                db.raw("CONCAT(project_key,'-',ticket_number) as ticketNumber"),
                 "summary",
                 "type",
                 "priority",
