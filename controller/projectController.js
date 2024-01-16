@@ -1,5 +1,4 @@
 const db = require("knex")(require("../knexfile")); 
-const knex = require("knex");
 const {validateToken} = require("../service/jwtService");
 
 /* Utility functions */
