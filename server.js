@@ -17,7 +17,7 @@ app.use("/", authRouter);
 app.use("/users", userRouter);
 app.use("/projects", projectRouter);
 app.use("/issues", issueRouter);
-app.use("/sprint", sprintRouter);
+app.use("/sprints", sprintRouter);
 
 app.get("/", (req, res)=>{
     return res.status(200).json({"message":"Connected"})

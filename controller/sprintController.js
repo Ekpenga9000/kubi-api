@@ -59,11 +59,9 @@ const createSprint = async (req, res) => {
         }
 
         // Insert the sprint into the database and return the id of the sprint;
-        const sprint = await db("sprint")
-            .insert(newSprint)
-            .returning("id");
-
-        return res.status(201).json({ sprint });     
+        await db("sprint")
+            .insert(newSprint); 
+        return res.status(201).send("New sprint created");     
 
     } catch (err) {
         console.log(err);
@@ -100,7 +98,80 @@ const fetchAllSprintByProjectId = async (req, res) => {
 
 }
 
+const fetchSprintById = async (req, res) => { 
+    //Retrieve the id of the customer
+    const { authorization } = req.headers;
+    
+    const userId = validateToken(authorization, "id");
+
+    if(!userId) {
+        return res.status(400).json({"message":"This is an invalid request."})
+    }
+
+    const { sprintId, projectId } = req.params;
+
+    if(!sprintId || !projectId) {
+        return res.status(400).json({"message":"This is an invalid request."})
+    }
+    try {
+
+        const data = await db("sprint")
+            .select("id", "name")
+            .where("id", sprintId)
+            .andWhere("project_id", projectId)
+            .first(); 
+        
+        if(!data.id) {
+            return res.status(404).json({"message":"No sprint found."})
+        }
+        
+        return res.status(200).json(data); 
+
+    } catch (err) {
+        console.log(err);
+    }
+}
+
+const fetchLatestSprint = async (req, res) => {
+
+    const { authorization } = req.headers; 
+
+    if (!authorization) {
+        return res.status(400).json({ "message": "This is not a valid request." });
+    }
+
+    const userId = validateToken(authorization, "id"); 
+
+    if (!userId) {
+        return res.status(401).json({ "message": "Unauthorized user" });
+    }
+
+    const { projectId } = req.params; 
+
+    if (!projectId) {
+        return res.status(400).json({ "message": "This is an invalid request" });
+    }
+
+    try {
+
+        const data = await db("sprint")
+            .select("id", "name")
+            .where("project_id", projectId)
+            .andWhere("status", "pending")
+            .orderBy("created_at", "desc")
+            .first(); 
+
+        return res.status(200).json(data);
+        
+    } catch (error) {
+        console.log(error); 
+        return res.status(500).send("Unable to carryout your request at the moment.")
+    } 
+}
+
 module.exports = {
     createSprint,
-    fetchAllSprintByProjectId
+    fetchAllSprintByProjectId, 
+    fetchSprintById,
+    fetchLatestSprint
 }
