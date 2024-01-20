@@ -203,10 +203,59 @@ const fetchAllActiveSprintsByProjectId = async (req, res) => {
     } 
 }
 
+const deleteSprint = async (req, res) => {
+    const { authorization } = req.headers; 
+
+    if (!authorization) {
+        return res.status(400).json({ "message": "Invalid request" }); 
+    }
+    const userId = validateToken(authorization, "id"); 
+
+    if (!userId) {
+        return res.status(401).json({ "message": "Unauthorized request" });
+    }
+
+    const { sprintId, projectId } = req.params; 
+
+    if (!projectId || !sprintId) {
+        return res.status(400).json({ "message": "Invalid request" }); 
+    }
+
+    try {
+        const user = await db("sprint")
+            .select("team.role as permission")
+            .join("project", "sprint.project_id", "project.id")
+            .join("team", "project.project_team", "team.id")
+            .where("sprint.id", sprintId)
+            .andWhere("project.id", projectId)
+            .first(); 
+        
+        if (!user) {
+            return res.status(404).send("No sprint with the id was found.");
+        }
+
+        if (user.permission !== "admin") {
+            return res.status(403).send("User has insufficient permission."); 
+        }
+
+        await db.transaction(async (trx) => {
+            await trx("sprint").where("id", sprintId).del(); 
+        })
+        
+        return res.status(204).send("Sprint has been deleted.");
+
+    } catch (err) {
+        console.log(err); 
+        return res.status(500).send("Unable to carryout your request at the moment.");
+    }
+
+}
+
 module.exports = {
     createSprint,
     fetchAllSprintByProjectId, 
     fetchSprintById,
     fetchLatestSprint, 
-    fetchAllActiveSprintsByProjectId
+    fetchAllActiveSprintsByProjectId,
+    deleteSprint
 }

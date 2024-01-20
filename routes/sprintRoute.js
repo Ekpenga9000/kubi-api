@@ -4,5 +4,6 @@ const sprintController = require("../controller/sprintController");
 router.post("/:projectId", sprintController.createSprint);
 router.get("/:projectId/sprint/:sprintId", sprintController.fetchSprintById);
 router.get("/:projectId/latest", sprintController.fetchLatestSprint);
+router.delete("/:projectId/:sprintId", sprintController.deleteSprint);
 
 module.exports = router; 
