@@ -85,7 +85,8 @@ const fetchIssuesByProjectId = async (req, res) => {
                 "priority",
                 "assignee"
             )
-            .where("project_id", projectId);
+            .where("project_id", projectId)
+            .andWhere("inSprint", "false");
         
         return res.status(200).json(data);
     } catch (err) {

@@ -22,6 +22,7 @@ exports.up = function (knex) {
     table
       .enu("status", ["Open", "In Progress", "In Review", "Done"])
       .defaultTo("Open");
+    table.enu("inSprint", ["true", "false"]).defaultTo("false");
     table.integer("creator").unsigned().references("user.id");
     table.integer("assignee").unsigned().references("user.id");
     table.string("story_point");
